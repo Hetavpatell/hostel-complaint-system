@@ -4,9 +4,9 @@ const prisma = require('../prisma');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, roomNo, phone } = req.body;
+    const { name, email, password, roomNo, phone } = req.body;
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -18,7 +18,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role, roomNo, phone },
+      data: { name, email, password: hashedPassword, role: 'STUDENT', roomNo, phone },
     });
 
     res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role });
@@ -49,6 +49,36 @@ exports.login = async (req, res) => {
     );
 
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, password, role, phone } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!['ADMIN', 'WORKER'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be ADMIN or WORKER' });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { name, email, password: hashedPassword, role, phone },
+    });
+
+    res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
