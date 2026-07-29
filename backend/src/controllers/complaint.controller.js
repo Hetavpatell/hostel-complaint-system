@@ -57,6 +57,10 @@ exports.getComplaintById = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    if (req.user.role === 'WORKER' && complaint.workerId !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     res.json(complaint);
   } catch (err) {
     console.error(err);
