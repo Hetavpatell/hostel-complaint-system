@@ -67,8 +67,7 @@ export default function WorkerDashboard() {
       </p>
       {c.photoUrl && (
         <img
-          src={`http://localhost:5000${c.photoUrl}`}
-          alt="complaint"
+          src={c.photoUrl} alt="complaint" 
           style={{ width: "150px", borderRadius: "6px", display: "block", marginBottom: "0.75rem" }}
         />
       )}

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -20,8 +21,9 @@ app.use('/api/stats', statsRoutes);
 const userRoutes = require('./routes/user.routes');
 app.use('/api/users', userRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hostel Complaint API running' });
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+app.get('/{*splat}', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
 const PORT = process.env.PORT || 5000;

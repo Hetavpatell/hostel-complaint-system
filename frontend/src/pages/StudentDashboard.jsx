@@ -115,7 +115,7 @@ export default function StudentDashboard() {
             {c.description}
             {c.photoUrl && (
               <div>
-                <img src={`http://localhost:5000${c.photoUrl}`} alt="complaint" width="150" />
+                <img src={c.photoUrl} alt="complaint" width="150" />
               </div>
             )}
           </li>
