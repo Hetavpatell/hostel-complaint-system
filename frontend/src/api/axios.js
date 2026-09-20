@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.DEV ? "http://localhost:5000/api" : "/api",
 });
 
 api.interceptors.request.use((config) => {
@@ -11,5 +11,12 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export const API_ORIGIN = import.meta.env.DEV ? "http://localhost:5000" : "";
+
+export function fileUrl(path) {
+  if (!path) return null;
+  return `${API_ORIGIN}${path}`;
+}
 
 export default api;

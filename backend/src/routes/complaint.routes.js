@@ -18,6 +18,8 @@ const {
   updateStatus,
   getAssignedComplaints,
   completeComplaint,
+  approveCompletion,
+  rejectCompletion,
 } = require('../controllers/complaint.controller');
 
 router.post('/', verifyToken, allowRoles('STUDENT'), upload.single('photo'), validate(createComplaintSchema), createComplaint);
@@ -26,7 +28,9 @@ router.get('/assigned', verifyToken, allowRoles('WORKER'), getAssignedComplaints
 router.get('/', verifyToken, allowRoles('ADMIN'), getAllComplaints);
 router.patch('/:id/assign', verifyToken, allowRoles('ADMIN'), validate(assignWorkerSchema), assignWorker);
 router.patch('/:id/status', verifyToken, allowRoles('ADMIN'), validate(updateStatusSchema), updateStatus);
-router.patch('/:id/complete', verifyToken, allowRoles('WORKER'), completeComplaint);
+router.patch('/:id/complete', verifyToken, allowRoles('WORKER'), upload.single('photo'), completeComplaint);
+router.patch('/:id/approve', verifyToken, allowRoles('ADMIN'), approveCompletion);
+router.patch('/:id/reject', verifyToken, allowRoles('ADMIN'), rejectCompletion);
 router.get('/:id', verifyToken, getComplaintById);
 
 module.exports = router;

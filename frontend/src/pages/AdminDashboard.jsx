@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import StatsView from "../components/StatsView";
+import api, { fileUrl } from "../api/axios";
 
-const STATUSES = ["PENDING", "ASSIGNED", "IN_PROGRESS", "COMPLETED"];
+const STATUSES = ["PENDING", "ASSIGNED", "IN_PROGRESS", "AWAITING_APPROVAL", "COMPLETED"];
 const CATEGORIES = ["Electrical", "Plumbing", "Wifi/Internet", "Furniture", "Cleanliness", "Other"];
 
 export default function AdminDashboard() {
@@ -74,6 +74,26 @@ export default function AdminDashboard() {
       loadComplaints();
     } catch (err) {
       setActionError(err.response?.data?.error || "Failed to update status");
+    }
+  }
+
+  async function handleApprove(complaintId) {
+    setActionError("");
+    try {
+      await api.patch(`/complaints/${complaintId}/approve`);
+      loadComplaints();
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Failed to approve");
+    }
+  }
+
+  async function handleReject(complaintId) {
+    setActionError("");
+    try {
+      await api.patch(`/complaints/${complaintId}/reject`);
+      loadComplaints();
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Failed to reject");
     }
   }
 
@@ -180,6 +200,7 @@ export default function AdminDashboard() {
               <th>Room</th>
               <th>Status</th>
               <th>Worker</th>
+              <th>Proof</th>
               <th>Created</th>
               <th>Assign</th>
               <th>Update Status</th>
@@ -195,6 +216,23 @@ export default function AdminDashboard() {
                 <td>{c.student?.roomNo || "—"}</td>
                 <td>{c.status}</td>
                 <td>{c.worker?.name || "—"}</td>
+                <td>
+                  {c.status === "AWAITING_APPROVAL" && c.proofPhotoUrl ? (
+                    <div>
+                      <img
+                        src={fileUrl(c.proofPhotoUrl)}
+                        alt="proof"
+                        style={{ width: "100px", borderRadius: "4px", display: "block", marginBottom: "0.4rem" }}
+                      />
+                      <button onClick={() => handleApprove(c.id)} style={{ marginRight: "0.4rem" }}>
+                        Approve
+                      </button>
+                      <button onClick={() => handleReject(c.id)}>Reject</button>
+                    </div>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td>{new Date(c.createdAt).toLocaleDateString()}</td>
                 <td>
                   <select defaultValue="" onChange={(e) => handleAssign(c.id, e.target.value)}>

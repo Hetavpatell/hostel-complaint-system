@@ -165,6 +165,37 @@ exports.completeComplaint = async (req, res) => {
       return res.status(403).json({ error: 'Not your assigned complaint' });
     }
 
+    if (!req.file) {
+      return res.status(400).json({ error: 'Proof photo is required to mark as done' });
+    }
+
+    const proofPhotoUrl = `/uploads/${req.file.filename}`;
+
+    const complaint = await prisma.complaint.update({
+      where: { id: complaintId },
+      data: { status: 'AWAITING_APPROVAL', proofPhotoUrl, rejected: false },
+    });
+
+    await prisma.complaintStatusLog.create({
+      data: { complaintId, status: 'AWAITING_APPROVAL', changedById: req.user.id },
+    });
+
+    res.json(complaint);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.approveCompletion = async (req, res) => {
+  try {
+    const complaintId = Number(req.params.id);
+
+    const existing = await prisma.complaint.findUnique({ where: { id: complaintId } });
+    if (!existing || existing.status !== 'AWAITING_APPROVAL') {
+      return res.status(400).json({ error: 'Complaint is not awaiting approval' });
+    }
+
     const complaint = await prisma.complaint.update({
       where: { id: complaintId },
       data: { status: 'COMPLETED' },
@@ -172,6 +203,31 @@ exports.completeComplaint = async (req, res) => {
 
     await prisma.complaintStatusLog.create({
       data: { complaintId, status: 'COMPLETED', changedById: req.user.id },
+    });
+
+    res.json(complaint);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.rejectCompletion = async (req, res) => {
+  try {
+    const complaintId = Number(req.params.id);
+
+    const existing = await prisma.complaint.findUnique({ where: { id: complaintId } });
+    if (!existing || existing.status !== 'AWAITING_APPROVAL') {
+      return res.status(400).json({ error: 'Complaint is not awaiting approval' });
+    }
+
+    const complaint = await prisma.complaint.update({
+      where: { id: complaintId },
+      data: { status: 'IN_PROGRESS', rejected: true },
+    });
+
+    await prisma.complaintStatusLog.create({
+      data: { complaintId, status: 'IN_PROGRESS', changedById: req.user.id },
     });
 
     res.json(complaint);
